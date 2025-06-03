@@ -20,19 +20,18 @@ class MockCategory:
 class TestWikiAnimals(unittest.TestCase):
     def setUp(self):
         """Подготовка тестового окружения перед каждым тестом"""
-        # Настройка мока для Wikipedia API
+    
         self.mock_wiki_patcher = patch('wikipediaapi.Wikipedia')
         self.mock_wiki = self.mock_wiki_patcher.start()
         self.wiki_instance = Mock()
         self.mock_wiki.return_value = self.wiki_instance
         
-        # Создаем временную директорию для тестов
+    
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):
         """Очистка после каждого теста"""
         self.mock_wiki_patcher.stop()
-        # Удаляем временную директорию
         shutil.rmtree(self.test_dir)
 
     def test_get_animals_with_library(self):
@@ -61,7 +60,6 @@ class TestWikiAnimals(unittest.TestCase):
         self.assertIsInstance(result, Counter)
         self.assertEqual(len(result), len(test_data))
         
-        # Проверяем подсчет букв
         for title, letter in test_data.items():
             self.assertGreater(result[letter], 0)
 
@@ -74,31 +72,23 @@ class TestWikiAnimals(unittest.TestCase):
 
     def test_save_to_csv(self):
         """Тест сохранения в CSV"""
-        # Подготавливаем тестовые данные
         test_data = Counter({
             'А': 5,
             'Б': 3,
             'В': 1
         })
-        
-        # Используем временную директорию
         test_file = os.path.join(self.test_dir, "test.csv")
         
-        # Сохраняем данные
         save_to_csv(test_data, test_file)
         
-        # Проверяем, что файл создан
         self.assertTrue(os.path.exists(test_file))
-        
-        # Проверяем содержимое файла
         with open(test_file, 'r', encoding='utf-8') as f:
             content = f.read().strip()
             lines = content.split('\n')
-            
-            # Проверяем количество строк
+    
             self.assertEqual(len(lines), len(test_data))
             
-            # Проверяем каждую строку
+        
             for line in lines:
                 letter, count = line.split(',')
                 self.assertIn(letter, test_data)
@@ -106,7 +96,6 @@ class TestWikiAnimals(unittest.TestCase):
 
     def test_main_function(self):
         """Тест основной функции программы"""
-        # Подготавливаем тестовые данные
         test_data = Counter({
             'А': 5,
             'Б': 3,
@@ -114,14 +103,10 @@ class TestWikiAnimals(unittest.TestCase):
         })
         
         output_file = os.path.join(self.test_dir, "beasts.csv")
-        
-        # Мокаем только get_animals_with_library
         with patch('solution.solution.get_animals_with_library') as mock_get_animals:
             mock_get_animals.return_value = test_data
             
-            # Мокаем os.path.dirname чтобы он возвращал нашу тестовую директорию
             with patch('solution.solution.os.path.dirname', return_value=self.test_dir):
-                # Запускаем main
                 main()
                 
                 self.assertTrue(os.path.exists(output_file))
